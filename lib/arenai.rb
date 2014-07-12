@@ -15,10 +15,17 @@ module Arenai
       # SELECT "users".* FROM "users" WHERE "users"."id" = ?  [["id", 1]]
       find_by_sql("SELECT #{quoted_table_name}.* FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{connection.quote_column_name primary_key} = ?", [[User.columns_hash[primary_key], id]]).first
     end
+  end
+
+  module Relation
+    attr_accessor :arenai_sql
+  end
 end
 
 ActiveSupport.on_load :active_record do
   class << ActiveRecord::Base
     prepend Arenai::Base
   end
+
+  ActiveRecord::Relation.prepend Arenai::Relation
 end
