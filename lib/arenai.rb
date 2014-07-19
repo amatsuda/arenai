@@ -47,12 +47,26 @@ module Arenai
       end
     end
 
+    def order(*args)
+      args.each do |o|
+        case o
+        when String
+          @arenai_values[:order] << o
+        when Symbol
+          @arenai_values[:order] << "#{quoted_table_name}.#{connection.quote_column_name o}"
+        end
+      end
+      super
+    end
+
     private def exec_queries
       return super if joins_values.any? || includes_values.any?
       return super if where_values.size != @arenai_values[:where].size
+      return super if order_values.size != @arenai_values[:order].size
 
       sql = "SELECT #{quoted_table_name}.* FROM #{quoted_table_name}"
       sql = "#{sql} WHERE #{@arenai_values[:where].join(' AND ')}" if @arenai_values[:where].any?
+      sql = "#{sql} ORDER BY #{@arenai_values[:order].join(', ')}" if @arenai_values[:order].any?
       @records = @klass.find_by_sql sql, []
 
       @records.each { |record| record.readonly! } if readonly_value
