@@ -23,11 +23,36 @@ module Arenai
       @arenai_values ||= Hash.new.tap {|h| h[:where], h[:order] = [], []}
     end
 
+    def where(opts = :chain, *rest)
+      if (opts == :chain) || opts.blank?
+        super
+      else
+        case opts
+        when String
+          @arenai_values[:where] << "(#{opts})"
+        when Hash
+          opts.each_pair do |k, v|
+            case v
+            #TODO
+            when Array, Hash, ActiveRecord::Base
+              # do nothing
+            when nil
+              @arenai_values[:where] << "#{quoted_table_name}.#{connection.quote_column_name k} IS NULL"
+            else
+              @arenai_values[:where] << "#{quoted_table_name}.#{connection.quote_column_name k} = #{connection.quote v}"
+            end
+          end
+        end
+        super
+      end
+    end
+
     private def exec_queries
       return super if joins_values.any? || includes_values.any?
-      return super if where_values.any?
+      return super if where_values.size != @arenai_values[:where].size
 
       sql = "SELECT #{quoted_table_name}.* FROM #{quoted_table_name}"
+      sql = "#{sql} WHERE #{@arenai_values[:where].join(' AND ')}" if @arenai_values[:where].any?
       @records = @klass.find_by_sql sql, []
 
       @records.each { |record| record.readonly! } if readonly_value
