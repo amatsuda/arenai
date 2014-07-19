@@ -22,6 +22,19 @@ module Arenai
       super
       @arenai_values ||= Hash.new.tap {|h| h[:where], h[:order] = [], []}
     end
+
+    private def exec_queries
+      return super if joins_values.any? || includes_values.any?
+      return super if where_values.any?
+
+      sql = "SELECT #{quoted_table_name}.* FROM #{quoted_table_name}"
+      @records = @klass.find_by_sql sql, []
+
+      @records.each { |record| record.readonly! } if readonly_value
+
+      @loaded = true
+      @records
+    end
   end
 end
 
