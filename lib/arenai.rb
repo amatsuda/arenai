@@ -18,7 +18,10 @@ module Arenai
   end
 
   module Relation
-    attr_accessor :arenai_sql
+    def initialize(*)
+      super
+      @arenai_values ||= Hash.new.tap {|h| h[:where], h[:order] = [], []}
+    end
   end
 end
 
