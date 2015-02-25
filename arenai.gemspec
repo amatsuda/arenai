@@ -25,4 +25,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'sqlite3'
   spec.add_development_dependency 'rspec', '< 2.9'
   spec.add_development_dependency 'wrong'
+  spec.add_development_dependency 'byebug'
 end
