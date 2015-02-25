@@ -12,8 +12,13 @@ module Arenai
       id = ids.first
       return super if !((Fixnum === id) || (String === id))
 
-      # SELECT "users".* FROM "users" WHERE "users"."id" = ?  [["id", 1]]
-      find_by_sql("SELECT #{quoted_table_name}.* FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{connection.quote_column_name primary_key} = ?", [[User.columns_hash[primary_key], id]]).first
+      if %w(mysql mysql2).include? connection.pool.spec.config[:adapter]
+        # SELECT "users".* FROM "users" WHERE "users"."id" = ?  [["id", 1]]
+        find_by_sql("SELECT #{quoted_table_name}.* FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{connection.quote_column_name primary_key} = #{id}").first
+      else
+        # SELECT "users".* FROM "users" WHERE "users"."id" = ?  [["id", 1]]
+        find_by_sql("SELECT #{quoted_table_name}.* FROM #{quoted_table_name} WHERE #{quoted_table_name}.#{connection.quote_column_name primary_key} = ?", [[columns_hash[primary_key], id]]).first
+      end
     end
   end
 
@@ -28,8 +33,9 @@ module Arenai
         super
       else
         case opts
-        when String
-          @arenai_values[:where] << "(#{opts})"
+        when String, Array
+          condition = @klass.send(:sanitize_sql, rest.empty? ? opts : ([opts] + rest))
+          @arenai_values[:where] << "(#{condition})"
         when Hash
           opts.each_pair do |k, v|
             case v
@@ -60,13 +66,20 @@ module Arenai
     end
 
     private def exec_queries
-      return super if joins_values.any? || includes_values.any?
+      return super if from_value || joins_values.any? || includes_values.any? || eager_load_values.any? || preload_values.any? || references_values.any? || lock_value
       return super if where_values.size != @arenai_values[:where].size
       return super if order_values.size != @arenai_values[:order].size
 
-      sql = "SELECT #{quoted_table_name}.* FROM #{quoted_table_name}"
-      sql = "#{sql} WHERE #{@arenai_values[:where].join(' AND ')}" if @arenai_values[:where].any?
-      sql = "#{sql} ORDER BY #{@arenai_values[:order].join(', ')}" if @arenai_values[:order].any?
+      sql = 'sELECT'
+      sql << ' DISTINCT' if distinct_value
+      sql << (select_values.any? ? " #{select_values.join(', ')}" : " #{quoted_table_name}.*")
+      sql << " FROM #{quoted_table_name}"
+      sql << " WHERE #{@arenai_values[:where].join(' AND ')}" if @arenai_values[:where].any?
+      sql << " GROUP BY #{group_values.join(', ')}" if group_values.any?
+      sql << " HAVING #{having_values.join(' AND ')}" if having_values.any?
+      sql << " ORDER BY #{@arenai_values[:order].join(', ')}" if @arenai_values[:order].any?
+      sql << " LIMIT #{limit_value}" if limit_value
+      sql << " OFFSET #{offset_value}" if offset_value
       @records = @klass.find_by_sql sql, []
 
       @records.each { |record| record.readonly! } if readonly_value
