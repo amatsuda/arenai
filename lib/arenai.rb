@@ -87,6 +87,12 @@ module Arenai
       @loaded = true
       @records
     end
+
+    private def rebuild_relation
+      @arenai_values.inject(self) do |rel, (key, value)|
+        ActiveRecord::Relation.instance_method(key).super_method().bind(rel).call(value)
+      end
+    end
   end
 end
 
