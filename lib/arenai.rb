@@ -59,7 +59,7 @@ module Arenai
     #TODO `or` method
     def where(opts = :chain, *rest)
       if (opts == :chain) || opts.blank?
-        build_relation_from_arenai_values.merge(super)
+        build_relation_from_arenai_values.arenai_original(:where, opts)
       else
         case opts
         when String, Array
