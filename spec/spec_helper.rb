@@ -7,6 +7,7 @@ require 'active_record'
 require 'wrong/adapters/rspec'
 require 'arenai'
 require 'fake_app'
+require 'byebug'
 
 ActiveRecord::Base.establish_connection('sqlite3::memory:')
 
