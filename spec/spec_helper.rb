@@ -22,5 +22,5 @@ RSpec.configure do |config|
     Author.create! name: 'nari'
   end
 
-  config.order = 'random'
+#   config.order = 'random'
 end

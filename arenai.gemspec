@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Arenai::VERSION
   spec.authors       = ["Akira Matsuda"]
   spec.email         = ["ronnie@dio.jp"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = 'arenai'
+  spec.description   = 'arenai'
   spec.homepage      = ""
   spec.license       = "MIT"
 

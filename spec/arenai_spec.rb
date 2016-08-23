@@ -19,6 +19,8 @@ describe Arenai do
 
   specify '#where(String valued Hash)' do
     assert { Author.where(name: 'takahashim').to_a.map(&:name) == %w(takahashim) }
+    assert { Author.where(name: 'takahashim').count == 1 }
+    assert { Author.where(name: 'amatsuda').exists? == false }
   end
 
   specify '#where(Fixnum valued Hash)' do
@@ -55,5 +57,10 @@ describe Arenai do
 
   specify '#where(AR)' do
     assert { Author.where(id: Author.find(3)).first.id == 3 }
+  end
+
+  specify '#where.not' do
+    assert { Author.where.not(name: 'takahashim').to_a.map(&:name) == %w(matz keiju aamine nari) }
+    assert { Author.where.not(name: 'takahashim').count == 4 }
   end
 end
